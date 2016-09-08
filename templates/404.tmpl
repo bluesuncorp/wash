@@ -1,0 +1,11 @@
+{{define "404"}}
+	{{template "header" .}}
+
+	<div class="content">
+    {{ .Data.Title }}
+  </div>
+
+	{{ jquery }}
+	{{ livereload }}
+	{{template "footer-end" .}}
+{{end}}

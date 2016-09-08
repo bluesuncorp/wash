@@ -1,0 +1,13 @@
+vendors:
+- path: github.com/caarlos0/env
+  rev: 8030fe5519ecb59ee38cb3c534b86dc868f23262
+- path: github.com/jaschaephraim/lrserver
+  rev: 0fd2fc04c2124d60246636e39527c7612bd77d9b
+- path: github.com/tdewolff/buffer
+  rev: 0edfcb7b750146ff879e95831de2ef53605a5cb5
+- path: github.com/tdewolff/minify
+  rev: df4442304489b08640a1abc16eb9c835262690be
+- path: github.com/tdewolff/parse
+  rev: b4aece81178be73e7ba74fe0a678cc890fc0378f
+- path: github.com/tdewolff/strconv
+  rev: 3e8091f4417ebaaa3910da63a45ea394ebbfb0e3
