@@ -9,13 +9,17 @@ import (
 // site requires JavaScript
 func GetJavascriptRequiredHandler(c *globals.Context) {
 
-	s := struct {
-		Title string
+	t := c.App().Translator()
+
+	trans := struct {
+		Title   string
+		Message string
 	}{
-		Title: "Javascript Required",
+		Title:   t.T("js-req-required"),
+		Message: t.T("js-req-required-msg"),
 	}
 
-	err := c.ExecuteTemplate("javascript-required", s)
+	err := c.ExecuteTemplate("javascript-required", trans, nil)
 	if err != nil {
 		log.WithFields(log.F("error", err)).Error("Issue Executing Javascript Required Template")
 	}

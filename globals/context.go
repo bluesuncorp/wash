@@ -46,15 +46,15 @@ func (c *Context) Templates() *Templates {
 
 // ExecuteTemplate calls the regular Tempaltes ExecuteTemplate and automatically uses the c.Response() object
 // as the io.Writer, if you wish to write to somethinf else call c.Templates().ExecuteTemplate()
-func (c *Context) ExecuteTemplate(name string, data interface{}) error {
-	return c.templates.executeTemplate(c.Response(), name, &templateData{Ctx: c, Data: data})
+func (c *Context) ExecuteTemplate(name string, translations interface{}, data interface{}) error {
+	return c.templates.executeTemplate(c.Response(), name, &templateData{Ctx: c, Trans: translations, Data: data})
 }
 
 // ExecuteAndReturnTemplate calls the regular Tempaltes ExecuteTemplate and automatically uses the c.Response() object
 // as the io.Writer, if you wish to write to somethinf else call c.Templates().ExecuteTemplate()
-func (c *Context) ExecuteAndReturnTemplate(name string, data interface{}) ([]byte, error) {
+func (c *Context) ExecuteAndReturnTemplate(name string, translations interface{}, data interface{}) ([]byte, error) {
 	b := bytes.NewBuffer(c.buff.Get())
-	err := c.templates.executeTemplate(b, name, &templateData{Ctx: c, Data: data})
+	err := c.templates.executeTemplate(b, name, &templateData{Ctx: c, Trans: translations, Data: data})
 	return b.Bytes(), err
 }
 

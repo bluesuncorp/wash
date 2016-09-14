@@ -24,7 +24,7 @@ func Initialize(l *lars.LARS, cfg *env.Config) (redirect *lars.LARS) {
 
 	log.Info("Initializing Routes ...")
 
-	l.Use(middleware.LoggingAndRecovery, mw.Gzip)
+	l.Use(middleware.LoggingAndRecovery, mw.Gzip, middleware.Security)
 
 	l.Register404(Get404Handler)
 	l.Get("/javascript-required", GetJavascriptRequiredHandler)
@@ -46,7 +46,7 @@ func initAssets(r lars.IRouteGroup) {
 	fs := http.FileServer(http.Dir("assets"))
 
 	a := r.Group("/assets/", nil)
-	a.Use(middleware.Security, mw.Gzip)
+	a.Use(mw.Gzip, middleware.Security)
 	a.Use(func(c lars.Context) {
 
 		if strings.LastIndex(c.Request().URL.Path, ".") == -1 {
@@ -61,7 +61,7 @@ func initAssets(r lars.IRouteGroup) {
 	a.Get("*", http.StripPrefix("/assets", fs))
 
 	i := r.Group("", nil)
-	i.Use(middleware.LoggingAndRecovery, middleware.Security, mw.Gzip)
+	i.Use(middleware.LoggingAndRecovery, mw.Gzip, middleware.Security)
 
 	fav := func(c lars.Context) {
 		c.Request().URL.Path = realFavicon

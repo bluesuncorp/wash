@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width">
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	<meta name="robots" content="noindex" />
-	<title>{{.Data.Title}}</title>
+	<title>{{ .Trans.Title }}</title>
 	<style>
 	/* -------------------------------------
 	    GLOBAL
@@ -154,12 +154,7 @@
 	<body bgcolor="#f6f6f6">
 		<div style="text-align: center;">
 			<img src="/assets/images/logo.png" style="height: 70px; margin-top: 10%">
-			<h1>JavaScript is required.</h1>
-			<p>This site requires Javascript to function correctly, there are two possible solutions.</p>
-			<ul>
-				<li> Enable Javascript within your browser settings.</li>
-				<li> Install a browser that has Javascript capabilities such as Chrome, Firefox, Safari...</li>
-			</ul>
+			<p>{{ .Trans.Message }}</p>
 		</div>
 	</body>
 	</html>

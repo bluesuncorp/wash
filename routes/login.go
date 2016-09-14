@@ -9,19 +9,15 @@ func getLogin(c *globals.Context) {
 
 	t := c.App().Translator()
 
-	visitor := t.O("numsuffix", 3, 0, "3")
-	days := t.C("days", 2, 0, "2")
-	final := t.T("testonly", "Joeybloggs", visitor, days)
-
-	s := struct {
+	trans := struct {
 		Title   string
 		Message string
 	}{
-		Title:   "Login",
-		Message: final,
+		Title:   t.T("login-login"),
+		Message: t.T("login-welcome", "Joeybloggs"),
 	}
 
-	err := c.ExecuteTemplate("login", s)
+	err := c.ExecuteTemplate("login", trans, nil)
 	if err != nil {
 		log.WithFields(log.F("error", err)).Error("Issue Executing login Template")
 	}

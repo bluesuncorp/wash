@@ -31,7 +31,9 @@ func Init(uni *ut.UniversalTranslator) {
 	trans.AddRange(en, "dayrange", "{0}-{1} days", locales.PluralRuleOther, false)
 
 	// actual message translations
-	trans.Add(en, "testonly", "Welcome {0}, you're the {1} to visit our site within the last {2}.", false)
+	login(en)
+	notFound(en)
+	jsRequired(en)
 
 	if err := en.VerifyTranslations(); err != nil {
 		log.WithFields(log.F("error", err)).Fatal("Missing Translations!")

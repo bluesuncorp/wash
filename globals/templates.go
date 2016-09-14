@@ -16,8 +16,9 @@ type Templates struct {
 }
 
 type templateData struct {
-	Ctx  *Context
-	Data interface{}
+	Ctx   *Context
+	Trans interface{} // Page translations
+	Data  interface{} // Data to be rendered
 }
 
 // NewTemplates returns a new template instance.
