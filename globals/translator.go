@@ -11,6 +11,7 @@ type Translator interface {
 	C(key interface{}, num float64, digits uint64, param string) string
 	O(key interface{}, num float64, digits uint64, param string) string
 	R(key interface{}, num1 float64, digits1 uint64, num2 float64, digits2 uint64, param1, param2 string) string
+	Base() ut.Translator
 }
 
 func newTranslator(trans ut.Translator) Translator {
@@ -19,6 +20,12 @@ func newTranslator(trans ut.Translator) Translator {
 
 type translator struct {
 	trans ut.Translator
+}
+
+// Base returns the underlying Translator that is wrapped by the globals Translator.
+// this is needed for validator translations
+func (t *translator) Base() ut.Translator {
+	return t.trans
 }
 
 // creates the translation for the locale given the 'key' and params passed in
