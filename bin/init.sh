@@ -15,7 +15,4 @@ go get -u
 go get
 
 echo "Installing Compile Daemon"
-go get -u github.com/githubnemo/CompileDaemon
-
-echo "Building App"
-go install -v -x
+go get -u github.com/go-playground/justdoit

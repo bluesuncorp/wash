@@ -24,4 +24,4 @@ export APP_SMTP_PASSWORD=
 export APP_SMTP_PORT=1025
 export APP_SUPPORT_EMAIL=support@email.com
 
-CompileDaemon -directory=./ -exclude-dir=.git -pattern="(.+\.go|.+\.c|.+\.yaml)$" -build="env GOGC=off go install -v" -command="$GOPATH/bin/$EXECUTABLE"
+justdoit -watch="./" -include="(.+\.go|.+\.c|.+\.yaml)$" -build="go install -v" -run="$GOPATH/bin/$EXECUTABLE"
