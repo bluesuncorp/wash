@@ -41,7 +41,7 @@ func main() {
 
 	email := globals.NewEmail(cfg.SMTPServer, cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPPort, cfg.SupportEmail)
 	buffer := globals.NewByteBuffer()
-	ut := translations.Initialize()
+	ut := translations.Initialize(validate)
 
 	templates, err := initTemplates(cfg, assets)
 	if err != nil {
