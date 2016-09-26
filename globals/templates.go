@@ -10,21 +10,27 @@ import (
 )
 
 // Templates contains all functions needed for rendering templates.
-type Templates struct {
+type Templates interface {
+}
+
+// templates contains all functions needed for rendering templates.
+type templates struct {
 	templates *template.Template
 	pool      *sync.Pool
 }
 
 type templateData struct {
-	Ctx   *Context
+	App   *App
 	Trans interface{} // Page translations
 	Data  interface{} // Data to be rendered
 }
 
-// NewTemplates returns a new template instance.
-func NewTemplates(tpls *template.Template) *Templates {
+var _ Templates = new(templates)
 
-	return &Templates{
+// newTemplates returns a new template instance.
+func newTemplates(tpls *template.Template) Templates {
+
+	return &templates{
 		templates: tpls,
 		pool: &sync.Pool{New: func() interface{} {
 			return bytes.NewBuffer(make([]byte, 0, 64))
@@ -33,7 +39,7 @@ func NewTemplates(tpls *template.Template) *Templates {
 }
 
 // ExecuteTemplate calls the regular ExecuteTemplate but with a few optimizations
-func (t *Templates) executeTemplate(wr io.Writer, name string, data interface{}) error {
+func (t *templates) executeTemplate(wr io.Writer, name string, data interface{}) error {
 
 	var err error
 
@@ -50,9 +56,4 @@ func (t *Templates) executeTemplate(wr io.Writer, name string, data interface{})
 	t.pool.Put(buff)
 
 	return err
-}
-
-// ResetTemplates updates templates underlying compiled templates
-func (t *Templates) ResetTemplates(templates *template.Template) {
-	t.templates = templates
 }

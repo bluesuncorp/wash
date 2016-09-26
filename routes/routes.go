@@ -6,33 +6,41 @@ import (
 	"strings"
 
 	"github.com/bluesuncorp/wash/env"
+	"github.com/bluesuncorp/wash/globals"
 	"github.com/bluesuncorp/wash/middleware"
-	"github.com/go-playground/lars"
-	mw "github.com/go-playground/lars/middleware"
 	"github.com/go-playground/log"
+	"github.com/go-playground/pure"
+	mw "github.com/go-playground/pure/middleware"
 )
 
 const (
-	favicon     = "/favicon.ico"
-	realFavicon = "/assets/images/favicon.ico"
-	robots      = "/robots.txt"
-	realRobots  = "/assets/robots.txt"
+	appPath = "$GOPATH/src/github.com/bluesuncorp/wash"
 )
 
+type app struct {
+	*globals.App
+}
+
+var a *app
+
 // Initialize initializes and return the http routes
-func Initialize(l *lars.LARS, cfg *env.Config) (redirect *lars.LARS) {
+func Initialize(p *pure.Mux, globs *globals.App, cfg *env.Config) (redirect *pure.Mux) {
+
+	a = &app{App: globs}
 
 	log.Info("Initializing Routes ...")
 
-	l.Use(middleware.LoggingAndRecovery, mw.Gzip, middleware.Security)
+	p.Use(middleware.LoggingAndRecovery, mw.Gzip, middleware.Security)
 
-	l.Register404(Get404Handler)
-	l.Get("/javascript-required", GetJavascriptRequiredHandler)
+	// different middlewae for 404 as once we start adding CSRF and auth middlewae, thye don;t really
+	// apply to the 404 page
+	p.Register404(a.get404Handler, middleware.LoggingAndRecovery, mw.Gzip, middleware.Security)
 
-	l.Get("/", getRoot)
-	l.Get("/login", getLogin)
+	p.Get("/javascript-required", a.getJavascriptRequiredHandler)
+	p.Get("/", a.getRoot)
+	p.Get("/login", a.getLogin)
 
-	initAssets(l)
+	initAssets(p)
 
 	if cfg.IsProduction {
 		redirect = setupRedirect(cfg)
@@ -41,51 +49,40 @@ func Initialize(l *lars.LARS, cfg *env.Config) (redirect *lars.LARS) {
 	return
 }
 
-func initAssets(r lars.IRouteGroup) {
+func initAssets(r pure.IRouteGroup) {
 
 	fs := http.FileServer(http.Dir("assets"))
 
 	a := r.Group("/assets/", nil)
 	a.Use(mw.Gzip, middleware.Security)
-	a.Use(func(c lars.Context) {
+	a.Use(func(next http.HandlerFunc) http.HandlerFunc {
 
-		if strings.LastIndex(c.Request().URL.Path, ".") == -1 {
-			http.Error(c.Response(), http.StatusText(http.StatusForbidden), http.StatusForbidden)
-			return
+		return func(w http.ResponseWriter, r *http.Request) {
+			if strings.LastIndex(r.URL.Path, ".") == -1 {
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				return
+			}
+
+			next(w, r)
 		}
-
-		c.Next()
 	})
 
 	// also add authentication?
-	a.Get("*", http.StripPrefix("/assets", fs))
+	a.Get("*", http.StripPrefix("/assets", fs).ServeHTTP)
 
 	i := r.Group("", nil)
 	i.Use(middleware.LoggingAndRecovery, mw.Gzip, middleware.Security)
 
-	fav := func(c lars.Context) {
-		c.Request().URL.Path = realFavicon
-		c.Next()
-		c.Request().URL.Path = favicon
-	}
-
-	robots := func(c lars.Context) {
-		c.Request().URL.Path = realRobots
-		c.Next()
-		c.Request().URL.Path = robots
-	}
-
-	i.Get("/favicon.ico", fav, fs)
-	i.Get("/robots.txt", robots, fs)
+	i.Get("/favicon.ico", fs.ServeHTTP)
+	i.Get("/robots.txt", fs.ServeHTTP)
 }
 
-func setupRedirect(cfg *env.Config) (redirect *lars.LARS) {
+func setupRedirect(cfg *env.Config) (redirect *pure.Mux) {
 
-	redirect = lars.New()
+	redirect = pure.New()
 	redirect.Use(middleware.LoggingAndRecovery)
-	redirect.Get("*", func(c lars.Context) {
-		req := c.Request()
-		http.Redirect(c.Response(), req, "https://"+req.Host+":"+strconv.Itoa(cfg.RedirectPort)+req.URL.String(), http.StatusMovedPermanently)
+	redirect.Get("*", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "https://"+r.Host+":"+strconv.Itoa(cfg.RedirectPort)+r.URL.String(), http.StatusMovedPermanently)
 	})
 	return
 }

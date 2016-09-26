@@ -1,6 +1,6 @@
 package middleware
 
-import "github.com/go-playground/lars"
+import "net/http"
 
 const (
 	xFrameOptions                = "X-Frame-Options"
@@ -15,11 +15,14 @@ const (
 )
 
 // Security Adds HTTP headers for XSS Protection and alike.
-func Security(c lars.Context) {
-	c.Response().Header().Add(xFrameOptions, xFrameOptionsValue)
-	c.Response().Header().Add(xContentTypeOptions, xContentTypeOptionsValue)
-	c.Response().Header().Add(xssProtection, xssProtectionValue)
-	c.Response().Header().Add(strictTransportSecurity, strictTransportSecurityValue)
+func Security(next http.HandlerFunc) http.HandlerFunc {
 
-	c.Next()
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add(xFrameOptions, xFrameOptionsValue)
+		w.Header().Add(xContentTypeOptions, xContentTypeOptionsValue)
+		w.Header().Add(xssProtection, xssProtectionValue)
+		w.Header().Add(strictTransportSecurity, strictTransportSecurityValue)
+
+		next(w, r)
+	}
 }

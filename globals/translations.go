@@ -1,8 +1,9 @@
 package globals
 
 import (
+	ut "github.com/go-playground/universal-translator"
+
 	"github.com/go-playground/log"
-	"github.com/go-playground/universal-translator"
 )
 
 // Translator wraps ut.Translator in order to wrap and handle errors transparently
@@ -14,12 +15,14 @@ type Translator interface {
 	Base() ut.Translator
 }
 
-func newTranslator(trans ut.Translator) Translator {
-	return &translator{trans: trans}
-}
-
 type translator struct {
 	trans ut.Translator
+}
+
+var _ Translator = new(translator)
+
+func newTranslator(trans ut.Translator) Translator {
+	return &translator{trans: trans}
 }
 
 // Base returns the underlying Translator that is wrapped by the globals Translator.

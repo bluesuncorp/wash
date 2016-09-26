@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html/template"
 	"os"
 	"path/filepath"
 	"sync"
@@ -10,13 +11,12 @@ import (
 	"github.com/go-playground/log"
 	"github.com/go-playground/statics/static"
 
-	"github.com/bluesuncorp/wash/globals"
 	"github.com/jaschaephraim/lrserver"
 	"gopkg.in/fsnotify.v1"
 )
 
 // startLiveReloadServer initializes a livereload to notify the browser of changes to code that does not need a recompile.
-func startLiveReloadServer(tpls *globals.Templates, cfg *env.Config, staticAssets *static.Files) {
+func startLiveReloadServer(tpls *template.Template, cfg *env.Config, staticAssets *static.Files) {
 
 	if cfg.IsProduction {
 		return
@@ -116,7 +116,7 @@ func startLiveReloadServer(tpls *globals.Templates, cfg *env.Config, staticAsset
 								if err != nil {
 									log.Errorf("%s %sError Compiling Templates: %s%s\n", UnknownError, Red, err.Error(), Reset)
 								} else {
-									tpls.ResetTemplates(templates)
+									*tpls = *templates
 
 									log.Infof("%s %sTemplates Updated: %s%s\n", ThumbsUpEmoji, Green, event.Name, Reset)
 									lr.Reload(event.Name)

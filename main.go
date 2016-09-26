@@ -10,9 +10,9 @@ import (
 	"github.com/bluesuncorp/wash/routes"
 	"github.com/bluesuncorp/wash/translations"
 
-	"github.com/go-playground/lars"
 	"github.com/go-playground/log"
 	"github.com/go-playground/log/handlers/console"
+	"github.com/go-playground/pure"
 	"github.com/go-playground/statics/static"
 )
 
@@ -39,8 +39,6 @@ func main() {
 		log.WithFields(log.F("error", err)).Fatal("Issue initializing static assets")
 	}
 
-	email := globals.NewEmail(cfg.SMTPServer, cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPPort, cfg.SupportEmail)
-	buffer := globals.NewByteBuffer()
 	ut := translations.Initialize(validate)
 
 	templates, err := initTemplates(cfg, assets)
@@ -48,14 +46,14 @@ func main() {
 		log.StackTrace().Panic(err)
 	}
 
-	tpls := globals.NewTemplates(templates)
-	go startLiveReloadServer(tpls, cfg, assets)
+	// tpls := newTemplates(templates)
+	go startLiveReloadServer(templates, cfg, assets)
 
-	l := lars.New()
-	l.RegisterContext(globals.NewContext(l, tpls, buffer, ut, email, validate))
-	l.RegisterCustomHandler(func(*globals.Context) {}, globals.CastContext)
+	app := globals.NewApp(cfg, ut, validate, templates)
 
-	redir := routes.Initialize(l, cfg)
+	p := pure.New()
+
+	redir := routes.Initialize(p, app, cfg)
 
 	log.Info("Listening")
 	if cfg.IsProduction {
@@ -109,7 +107,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		server := &http.Server{Addr: ":" + strconv.Itoa(cfg.AppPort), Handler: l.Serve(), TLSConfig: tlsConfig}
+		server := &http.Server{Addr: ":" + strconv.Itoa(cfg.AppPort), Handler: p.Serve(), TLSConfig: tlsConfig}
 		err = server.ListenAndServeTLS("", "")
 		if err != nil {
 			log.WithFields(log.F("error", err)).Error("shutting down server")
@@ -117,7 +115,7 @@ func main() {
 
 	} else {
 
-		err := http.ListenAndServe(":"+strconv.Itoa(cfg.AppPort), l.Serve())
+		err := http.ListenAndServe(":"+strconv.Itoa(cfg.AppPort), p.Serve())
 		if err != nil {
 			log.WithFields(log.F("error", err)).Error("shutting down server")
 		}
