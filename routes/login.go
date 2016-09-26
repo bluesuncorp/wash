@@ -1,13 +1,14 @@
 package routes
 
 import (
-	"github.com/bluesuncorp/wash/globals"
+	"net/http"
+
 	"github.com/go-playground/log"
 )
 
-func getLogin(c *globals.Context) {
+func (a *app) getLogin(w http.ResponseWriter, r *http.Request) {
 
-	t := c.App().Translator()
+	t := a.Translator(r)
 
 	trans := struct {
 		Title   string
@@ -17,7 +18,7 @@ func getLogin(c *globals.Context) {
 		Message: t.T("login-welcome", "Joeybloggs"),
 	}
 
-	err := c.ExecuteTemplate("login", trans, nil)
+	err := a.ExecuteTemplate(w, "login", trans, nil)
 	if err != nil {
 		log.WithFields(log.F("error", err)).Error("Issue Executing login Template")
 	}

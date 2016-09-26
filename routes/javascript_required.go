@@ -1,15 +1,16 @@
 package routes
 
 import (
-	"github.com/bluesuncorp/wash/globals"
+	"net/http"
+
 	"github.com/go-playground/log"
 )
 
-// GetJavascriptRequiredHandler will process the JavaScript required page explaining that this
+// getJavascriptRequiredHandler will process the JavaScript required page explaining that this
 // site requires JavaScript
-func GetJavascriptRequiredHandler(c *globals.Context) {
+func (a *app) getJavascriptRequiredHandler(w http.ResponseWriter, r *http.Request) {
 
-	t := c.App().Translator()
+	t := a.Translator(r)
 
 	trans := struct {
 		Title   string
@@ -19,7 +20,7 @@ func GetJavascriptRequiredHandler(c *globals.Context) {
 		Message: t.T("js-req-required-msg"),
 	}
 
-	err := c.ExecuteTemplate("javascript-required", trans, nil)
+	err := a.ExecuteTemplate(w, "javascript-required", trans, nil)
 	if err != nil {
 		log.WithFields(log.F("error", err)).Error("Issue Executing Javascript Required Template")
 	}

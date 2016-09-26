@@ -7,16 +7,24 @@ import (
 )
 
 // ByteBuffer contains all buffer related logic
-type ByteBuffer struct {
+type ByteBuffer interface {
+	Get() []byte
+	Put(bytes []byte)
+}
+
+// byteBuffer contains all buffer related logic
+type byteBuffer struct {
 	pool *sync.Pool
 }
 
-// NewByteBuffer returns a new ByteBuffer instance
-func NewByteBuffer() *ByteBuffer {
+var _ ByteBuffer = new(byteBuffer)
+
+// newByteBuffer returns a new ByteBuffer instance
+func newByteBuffer() ByteBuffer {
 
 	log.Info("Initializing ByteBuffer")
 
-	return &ByteBuffer{
+	return &byteBuffer{
 		pool: &sync.Pool{New: func() interface{} {
 			return make([]byte, 0, 64)
 		}},
@@ -24,11 +32,11 @@ func NewByteBuffer() *ByteBuffer {
 }
 
 // Get returns buffer from the pool or a new instance of one if none exists
-func (b *ByteBuffer) Get() []byte {
+func (b *byteBuffer) Get() []byte {
 	return b.pool.Get().([]byte)
 }
 
 // Put returns a buffer to the pool + resets it for next use
-func (b *ByteBuffer) Put(bytes []byte) {
+func (b *byteBuffer) Put(bytes []byte) {
 	b.pool.Put(bytes[0:0])
 }
