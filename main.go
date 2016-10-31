@@ -46,8 +46,10 @@ func main() {
 		log.StackTrace().Panic(err)
 	}
 
-	// tpls := newTemplates(templates)
-	go startLiveReloadServer(templates, cfg, assets)
+	err = startLiveReloadServer(templates, cfg, assets)
+	if err != nil {
+		log.WithFields(log.F("error", err)).Error("could not start livereload server")
+	}
 
 	app := globals.NewApp(cfg, ut, validate, templates)
 
