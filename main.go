@@ -57,7 +57,7 @@ func main() {
 
 	redir := routes.Initialize(p, app, cfg)
 
-	log.Info("Listening")
+	log.Infof("Listening on port %d\n", cfg.AppPort)
 	if cfg.IsProduction {
 
 		go func() {

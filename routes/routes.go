@@ -53,7 +53,7 @@ func initAssets(r pure.IRouteGroup) {
 
 	fs := http.FileServer(http.Dir("assets"))
 
-	a := r.Group("/assets/", nil)
+	a := r.GroupWithNone("/assets/")
 	a.Use(mw.Gzip, middleware.Security)
 	a.Use(func(next http.HandlerFunc) http.HandlerFunc {
 
@@ -70,7 +70,7 @@ func initAssets(r pure.IRouteGroup) {
 	// also add authentication?
 	a.Get("*", http.StripPrefix("/assets", fs).ServeHTTP)
 
-	i := r.Group("", nil)
+	i := r.GroupWithNone("")
 	i.Use(middleware.LoggingAndRecovery, mw.Gzip, middleware.Security)
 
 	i.Get("/favicon.ico", fs.ServeHTTP)
