@@ -1,144 +1,48 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
-	"sync"
-	"time"
+	"html/template"
 
 	"github.com/bluesuncorp/wash/env"
+	"github.com/go-playground/livereload"
 	"github.com/go-playground/log"
 	"github.com/go-playground/statics/static"
-
-	"github.com/bluesuncorp/wash/globals"
-	"github.com/jaschaephraim/lrserver"
-	"gopkg.in/fsnotify.v1"
 )
 
 // startLiveReloadServer initializes a livereload to notify the browser of changes to code that does not need a recompile.
-func startLiveReloadServer(tpls *globals.Templates, cfg *env.Config, staticAssets *static.Files) {
+func startLiveReloadServer(tpls *template.Template, cfg *env.Config, staticAssets *static.Files) error {
 
 	if cfg.IsProduction {
-		return
+		return nil
 	}
 
 	log.Info("Initializing livereload")
 
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatalf("%s %s%s%s", UnknownError, Red, err.Error(), Reset)
+	paths := []string{
+		"assets",
+		"templates",
 	}
 
-	defer watcher.Close()
+	tmplFn := func(name string) (bool, error) {
 
-	walker := func(path string, info os.FileInfo, err error) error {
-
-		if info.IsDir() {
-			err = watcher.Add(path)
-			if err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	err = filepath.Walk("assets", walker)
-	if err != nil {
-		log.WithFields(log.F("error", err)).Fatal("Failed to Walk assets for livereload")
-	}
-
-	err = filepath.Walk("templates", walker)
-	if err != nil {
-		log.WithFields(log.F("error", err)).Fatal("Failed to Walk assets for livereload")
-	}
-
-	done := make(chan bool)
-
-	lr, err := lrserver.New(lrserver.DefaultName, lrserver.DefaultPort)
-	if err != nil {
-		log.Error(err)
-	}
-
-	// Start LiveReload server
-	go func() {
-		err := lr.ListenAndServe()
+		templates, err := initTemplates(cfg, staticAssets)
 		if err != nil {
-			log.WithFields(log.F("error", err)).Error("error with livereload")
+			return false, err
 		}
-	}()
 
-	var locker sync.Mutex
-	timerRunning := false
+		*tpls = *templates
 
-	eventMap := map[string]*fsnotify.Event{}
+		return true, nil
 
-	go func() {
-		for {
-			select {
-			case event := <-watcher.Events:
+	}
 
-				locker.Lock()
-				eventMap[event.Name] = &event
+	mappings := livereload.ReloadMapping{
+		".css":  nil,
+		".js":   nil,
+		".tmpl": tmplFn,
+	}
 
-				if !timerRunning {
-					timerRunning = true
+	_, err := livereload.ListenAndServe(livereload.DefaultPort, paths, mappings)
 
-					go func() {
-
-						time.Sleep(200 * time.Millisecond)
-
-						locker.Lock()
-
-						for _, event := range eventMap {
-
-							ext := filepath.Ext(event.Name)
-
-							if ext == ".js" {
-
-								log.Infof("%s %sJavascript Updated: %s%s\n", ThumbsUpEmoji, Green, event.Name, Reset)
-
-								lr.Reload(event.Name)
-								time.Sleep(100 * time.Millisecond)
-
-							} else if ext == ".css" {
-
-								log.Infof("%s %sCSS Updated: %s%s\n", ThumbsUpEmoji, Green, event.Name, Reset)
-
-								lr.Reload(event.Name)
-								time.Sleep(100 * time.Millisecond)
-
-							} else if ext == ".tmpl" {
-
-								log.Infof("Compiling Templates: %s\n", event.Name)
-								templates, err := initTemplates(cfg, staticAssets)
-
-								if err != nil {
-									log.Errorf("%s %sError Compiling Templates: %s%s\n", UnknownError, Red, err.Error(), Reset)
-								} else {
-									tpls.ResetTemplates(templates)
-
-									log.Infof("%s %sTemplates Updated: %s%s\n", ThumbsUpEmoji, Green, event.Name, Reset)
-									lr.Reload(event.Name)
-									time.Sleep(100 * time.Millisecond)
-								}
-							}
-						}
-
-						eventMap = map[string]*fsnotify.Event{}
-						timerRunning = false
-						locker.Unlock()
-					}()
-				}
-
-				locker.Unlock()
-
-			case err := <-watcher.Errors:
-
-				log.Errorf("%s %sWatcher Error:%s%s\n", UnknownError, Red, err.Error(), Reset)
-			}
-		}
-	}()
-
-	<-done
+	return err
 }

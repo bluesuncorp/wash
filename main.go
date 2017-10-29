@@ -48,8 +48,10 @@ func main() {
 		log.StackTrace().Panic(err)
 	}
 
-	tpls := globals.NewTemplates(templates)
-	go startLiveReloadServer(tpls, cfg, assets)
+	err = startLiveReloadServer(templates, cfg, assets)
+	if err != nil {
+		log.WithFields(log.F("error", err)).Error("could not start livereload server")
+	}
 
 	l := lars.New()
 	l.RegisterContext(globals.NewContext(l, tpls, buffer, ut, email, validate))
